@@ -37,17 +37,25 @@ def load_env():
 
 
 def access_token():
+    keys = ("YT_CLIENT_ID", "YT_CLIENT_SECRET", "YT_REFRESH_TOKEN")
+    vals = {k: os.environ.get(k, "").strip() for k in keys}
+    missing = [k for k, v in vals.items() if not v]
+    if missing:
+        sys.exit(f"missing env/secrets: {', '.join(missing)}")
+    for k, v in vals.items():
+        print(f"{k}: {len(v)} chars, starts {v[:4]!r}")
     r = requests.post(
         "https://oauth2.googleapis.com/token",
         data={
-            "client_id": os.environ["YT_CLIENT_ID"],
-            "client_secret": os.environ["YT_CLIENT_SECRET"],
-            "refresh_token": os.environ["YT_REFRESH_TOKEN"],
+            "client_id": vals["YT_CLIENT_ID"],
+            "client_secret": vals["YT_CLIENT_SECRET"],
+            "refresh_token": vals["YT_REFRESH_TOKEN"],
             "grant_type": "refresh_token",
         },
         timeout=30,
     )
-    r.raise_for_status()
+    if r.status_code != 200:
+        sys.exit(f"token refresh failed ({r.status_code}): {r.text}")
     return r.json()["access_token"]
 
 
