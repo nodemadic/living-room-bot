@@ -1,0 +1,28 @@
+name: match spotify csv
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  match:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - run: python3 match.py data/*.csv
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+      - run: |
+          git config user.name "living-room-bot"
+          git config user.email "bot@bot.mirrordev.net"
+          git add notes
+          git diff --cached --quiet || git commit -m "match: notes from Spotify CSVs"
+          git push
